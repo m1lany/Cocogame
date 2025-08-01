@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Cobrinha do Coco Tropical - Versão Realista</title>
+  <style>
+    :root {
+      --primary-color: #33691E;
+      --secondary-color: #689F38;
+      --light-color: #F1F8E9;
+      --accent-color: #FFD600;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      background-image: linear-gradient(to bottom, #e8f5e9, #c8e6c9);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin: 20px 0;
+      color: var(--primary-color);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      font-size: clamp(1.8em, 5vw, 2.8em);
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 0 15px;
+    }
+
+    #score-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+
+    #score, #cocoCounter {
+      font-size: clamp(16px, 4vw, 22px);
+      font-weight: 600;
+      color: #F9FBE7;
+      background-color: var(--secondary-color);
+      padding: 8px 15px;
+      border-radius: 30px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: inline-block;
+      min-width: 120px;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 95%;
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #DCEDC8;
+      padding: 15px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 1px solid #AED581;
+    }
+
+    #gameCanvas {
+      background-color: #F1F8E9;
+      display: block;
+      margin: 15px auto;
+      border: 1px solid #AED581;
+      border-radius: 10px;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.05);
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1/1;
+      max-width: 450px;
+      max-height: 450px;
+    }
+
+    #gameOverScreen {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(104, 159, 56, 0.95);
+      color: #F9FBE7;
+      font-size: clamp(24px, 5vw, 32px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-radius: 15px;
+      text-align: center;
+      font-weight: 600;
+      backdrop-filter: blur(3px);
+      padding: 20px;
+    }
+
+    #startScreen {
+      width: 95%;
+      max-width: 540px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #DCEDC8;
+      border-radius: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 1px solid #AED581;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .floating-element {
+      position: absolute;
+      background-size: contain;
+      background-repeat: no-repeat;
+      filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1));
+      animation: float 6s infinite ease-in-out;
+      z-index: 1;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+
+    #startBtn, #restartBtn, #quizContinueBtn {
+      margin-top: 20px;
+      padding: 12px 30px;
+      font-size: clamp(16px, 4vw, 20px);
+      background-color: var(--accent-color);
+      color: var(--primary-color);
+      border: none;
+      border-radius: 35px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      z-index: 2;
+      width: auto;
+      display: inline-block;
+    }
+
+    #startBtn:hover, #restartBtn:hover, #quizContinueBtn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+
+    #startBtn:active, #restartBtn:active, #quizContinueBtn:active {
+      transform: translateY(1px);
+      box-shadow:  0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    #startBtn::before, #restartBtn::before, #quizContinueBtn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+      transform: translateX(-100%);
+      transition: 0.5s;
+      z-index: -1;
+    }
+
+    #startBtn:hover::before, #restartBtn:hover::before, #quizContinueBtn:hover::before {
+      transform: translateX(100%);
+    }
+
+    .controls {
+      margin: 15px 0;
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: clamp(14px, 3.5vw, 18px);
+      background-color: #F9FBE7;
+      padding: 10px 15px;
+      border-radius: 25px;
+      display: inline-block;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    #powerStatus {
+      margin: 15px 0;
+      font-size: clamp(14px, 3.5vw, 18px);
+      color: #F9FBE7;
+      font-weight: 600;
+      background-color: #8BC34A;
+      padding: 8px 15px;
+      border-radius: 25px;
+      display: inline-block;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    #quizContainer {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(220, 237, 200, 0.95);
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      z-index: 10;
+      backdrop-filter: blur(3px);
+      padding: 20px;
+    }
+
+    .quiz-question {
+      font-size: clamp(18px, 4vw, 22px);
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      padding: 0 15px;
+      line-height: 1.4;
+    }
+
+    .quiz-option {
+      margin: 10px;
+      padding: 12px;
+      background-color: #F9FBE7;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: clamp(16px, 3.5vw, 18px);
+      color: var(--primary-color);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      transition: all 0.3s;
+      width: 90%;
+      max-width: 400px;
+      border: 1px solid #AED581;
+    }
+
+    .quiz-option:hover {
+      background-color: #DCEDC8;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+
+    #quizResult {
+      font-weight: 600;
+      margin-top: 20px;
+      font-size: clamp(16px, 3.5vw, 18px);
+      color: var(--primary-color);
+      padding: 0 15px;
+      line-height: 1.5;
+    }
+
+    .game-title {
+      font-size: clamp(2em, 6vw, 3em);
+      color: var(--primary-color);
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .game-subtitle {
+      color: var(--secondary-color);
+      font-size: clamp(1em, 3.5vw, 1.2em);
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .realistic-texture {
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23DCEDC8"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23C5E1A5" stroke-width="1" opacity="0.1"/></svg>');
+      background-size: 20px 20px;
+    }
+
+    .game-description {
+      max-width: 90%;
+      margin: 15px auto;
+      color: var(--primary-color);
+      font-size: clamp(1em, 3.5vw, 1.1em);
+      line-height: 1.6;
+      position: relative;
+      z-index: 2;
+      background-color: rgba(249, 251, 231, 0.8);
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .tropical-scene {
+      width: 100%;
+      max-width: 300px;
+      margin: 15px auto;
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1));
+    }
+
+    .game-features {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .feature {
+      background-color: rgba(249, 251, 231, 0.8);
+      padding: 12px;
+      border-radius: 15px;
+      width: calc(50% - 15px);
+      min-width: 120px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      transition: all 0.3s;
+    }
+
+    .feature:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+
+    .feature-icon {
+      font-size: 1.8em;
+      margin-bottom: 8px;
+      color: var(--secondary-color);
+    }
+
+    .feature-title {
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 5px;
+      font-size: clamp(14px, 3vw, 16px);
+    }
+
+    .feature-desc {
+      font-size: clamp(12px, 2.8vw, 14px);
+      color: var(--primary-color);
+    }
+
+    .palm-tree {
+      position: absolute;
+      width: 100px;
+      height: 150px;
+      bottom: -20px;
+      left: -20px;
+      z-index: 1;
+      animation: sway 8s infinite ease-in-out;
+      display: none;
+    }
+
+    .palm-tree.right {
+      left: auto;
+      right: -20px;
+      animation-delay: 0.5s;
+    }
+
+    @keyframes sway {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+    }
+
+    .sun {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      top: -20px;
+      right: -20px;
+      background: radial-gradient(circle, #FFD600, #FFAB00);
+      border-radius: 50%;
+      z-index: 1;
+      animation: pulse 4s infinite alternate;
+      display: none;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.1); }
+    }
+
+    .wave {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%238BC34A" fill-opacity="0.3" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+      background-size: cover;
+      z-index: 1;
+    }
+
+    /* Media queries para telas maiores */
+    @media (min-width: 768px) {
+      #score, #cocoCounter {
+        padding: 10px 25px;
+      }
+
+      #gameContainer {
+        padding: 20px;
+      }
+
+      .game-description {
+        max-width: 80%;
+        padding: 20px;
+      }
+
+      .feature {
+        width: 120px;
+      }
+
+      .palm-tree, .sun {
+        display: block;
+      }
+
+      .palm-tree {
+        width: 150px;
+        height: 200px;
+        left: -30px;
+      }
+
+      .palm-tree.right {
+        right: -30px;
+      }
+
+      .sun {
+        width: 100px;
+        height: 100px;
+        top: -30px;
+        right: -30px;
+      }
+
+      .wave {
+        height: 50px;
+      }
+    }
+
+    /* Controles para mobile */
+    .mobile-controls {
+      display: none;
+      margin: 20px auto;
+      width: 100%;
+      max-width: 300px;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
+      gap: 5px;
+    }
+
+    .mobile-btn {
+      background-color: rgba(104, 159, 56, 0.7);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 20px;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+      aspect-ratio: 1/1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .mobile-btn:active {
+      background-color: rgba(104, 159, 56, 0.9);
+      transform: scale(0.95);
+    }
+
+    .mobile-btn.up {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .mobile-btn.left {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .mobile-btn.right {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .mobile-btn.down {
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    @media (max-width: 600px) {
+      .mobile-controls {
+        display: grid;
+      }
+      
+      .controls {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🐍 Coco de roda game🌴</h1>
+  
+  <div id="startScreen" class="realistic-texture">
+    <!-- Elementos decorativos -->
+    <div class="sun"></div>
+    <div class="palm-tree">
+      <svg viewBox="0 0 200 200">
+        <path d="M100,20 C120,40 130,70 100,100 C70,70 80,40 100,20" fill="#33691E"/>
+        <path d="M100,40 C120,60 130,90 100,120 C70,90 80,60 100,40" fill="#33691E"/>
+        <path d="M100,60 C120,80 130,110 100,140 C70,110 80,80 100,60" fill="#33691E"/>
+        <rect x="95" y="140" width="10" height="60" fill="#5D4037"/>
+      </svg>
+    </div>
+    <div class="palm-tree right">
+      <svg viewBox="0 0 200 200">
+        <path d="M100,20 C80,40 70,70 100,100 C130,70 120,40 100,20" fill="#33691E"/>
+        <path d="M100,40 C80,60 70,90 100,120 C130,90 120,60 100,40" fill="#33691E"/>
+        <path d="M100,60 C80,80 70,110 100,140 C130,110 120,80 100,60" fill="#33691E"/>
+        <rect x="95" y="140" width="10" height="60" fill="#5D4037"/>
+      </svg>
+    </div>
+    <div class="wave"></div>
+    
+    <!-- Conteúdo principal -->
+    <div class="game-title">Coco de roda game</div>
+    <div class="game-subtitle">Uma aventura na floresta tropical</div>
+    
+    <div class="game-description">
+      Ajude a cobrinha faminta a coletar cocos na floresta tropical! 
+      Colete 10 cocos para desbloquear o coco dourado especial e ganhar poderes incríveis.
+      Mas cuidado para não bater na parede ou em si mesma!
+    </div>
+    
+    <div class="tropical-scene">
+      <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+        <rect width="300" height="200" fill="#DCEDC8"/>
+        <!-- Céu -->
+        <rect width="300" height="100" fill="#81D4FA"/>
+        <!-- Sol -->
+        <circle cx="250" cy="50" r="30" fill="#FFD600"/>
+        <!-- Montanhas -->
+        <path d="M0,100 L50,50 L100,80 L150,40 L200,70 L250,30 L300,60 L300,100 Z" fill="#AED581"/>
+        <!-- Palmeiras -->
+        <path d="M50,120 L60,70 L70,120 Z" fill="#33691E"/>
+        <rect x="58" y="120" width="4" height="30" fill="#5D4037"/>
+        <path d="M100,120 L110,80 L120,120 Z" fill="#33691E"/>
+        <rect x="108" y="120" width="4" height="30" fill="#5D4037"/>
+        <!-- Cobra -->
+        <path d="M200,150 C220,140 240,160 250,140 C260,160 280,140 300,150" stroke="#689F38" stroke-width="10" fill="none"/>
+        <circle cx="200" cy="150" r="8" fill="#8BC34A"/>
+        <!-- Coco -->
+        <circle cx="220" cy="100" r="15" fill="#5D4037"/>
+        <circle cx="220" cy="100" r="10" fill="#8D6E63"/>
+      </svg>
+    </div>
+    
+    <div class="game-features">
+      <div class="feature">
+        <div class="feature-icon">🎮</div>
+        <div class="feature-title">Controles Fáceis</div>
+        <div class="feature-desc">Use as setas do teclado</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">✨</div>
+        <div class="feature-title">Poderes Especiais</div>
+        <div class="feature-desc">Coco dourado</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📚</div>
+        <div class="feature-title">Aprenda</div>
+        <div class="feature-desc">Sobre Coco de Roda</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌴</div>
+        <div class="feature-title">Tema Tropical</div>
+        <div class="feature-desc">Gráficos realistas</div>
+      </div>
+    </div>
+    
+    <button id="startBtn">Iniciar Jogo</button>
+  </div>
+  
+  <div id="gameContainer" style="display: none;">
+    <div id="score-container">
+      <div id="score">Pontuação: 0</div>
+      <div id="cocoCounter">Cocos: 0/10</div>
+    </div>
+    <div class="controls">Use as setas do teclado para mover</div>
+    <canvas id="gameCanvas" width="450" height="450"></canvas>
+    <div id="powerStatus"></div>
+    
+    <!-- Controles para mobile -->
+    <div class="mobile-controls">
+      <button class="mobile-btn up" id="upBtn">↑</button>
+      <button class="mobile-btn left" id="leftBtn">←</button>
+      <button class="mobile-btn right" id="rightBtn">→</button>
+      <button class="mobile-btn down" id="downBtn">↓</button>
+    </div>
+    
+    <div id="gameOverScreen">
+      <div>Fim do jogo!<br><br>Sua pontuação: <span id="finalScore"></span></div>
+      <button id="restartBtn">Jogar Novamente</button>
+    </div>
+    
+    <div id="quizContainer">
+      <div class="quiz-question" id="quizQuestion"></div>
+      <div id="quizOptions"></div>
+      <div id="quizResult"></div>
+      <button id="quizContinueBtn">Continuar</button>
+    </div>
+  </div>
+
+  <audio id="backgroundMusic" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreElement = document.getElementById("score");
+    const cocoCounter = document.getElementById("cocoCounter");
+    const gameOverScreen = document.getElementById("gameOverScreen");
+    const finalScoreSpan = document.getElementById("finalScore");
+    const restartBtn = document.getElementById("restartBtn");
+    const powerStatus = document.getElementById("powerStatus");
+    const backgroundMusic = document.getElementById("backgroundMusic");
+    const startScreen = document.getElementById("startScreen");
+    const gameContainer = document.getElementById("gameContainer");
+    const startBtn = document.getElementById("startBtn");
+    const quizContainer = document.getElementById("quizContainer");
+    const quizQuestion = document.getElementById("quizQuestion");
+    const quizOptions = document.getElementById("quizOptions");
+    const quizResult = document.getElementById("quizResult");
+    const quizContinueBtn = document.getElementById("quizContinueBtn");
+    
+    // Controles mobile
+    const upBtn = document.getElementById("upBtn");
+    const leftBtn = document.getElementById("leftBtn");
+    const rightBtn = document.getElementById("rightBtn");
+    const downBtn = document.getElementById("downBtn");
+
+    // Ajusta o tamanho do canvas para manter proporção quadrada
+    function resizeCanvas() {
+      const containerWidth = gameContainer.clientWidth;
+      const size = Math.min(containerWidth - 40, 450); // 40px de padding
+      canvas.width = size;
+      canvas.height = size;
+      gridSize = canvas.width / tileCount;
+    }
+
+    const tileCount = 20;
+    let gridSize = canvas.width / tileCount;
+
+    // Configurações do jogo
+    let snake = [{ x: 10, y: 10 }];
+    let velocityX = 1;
+    let velocityY = 0;
+    let food = { x: 5, y: 5 };
+    let specialFood = null;
+    let score = 0;
+    let cocosCollected = 0;
+    let gameSpeed = 150;
+    let gameRunning = true;
+    let specialFoodTimer = 0;
+    let powerActive = false;
+    let powerEndTime = 0;
+    let snakeGrowth = 0;
+
+    // Texturas pré-renderizadas
+    const textures = {
+      wood: createWoodTexture(),
+      leaf: createLeafTexture(),
+      coconut: createCoconutTexture(),
+      goldenCoconut: createGoldenCoconutTexture(),
+      snakeBody: createSnakeBodyTexture(),
+      snakeHead: createSnakeHeadTexture()
+    };
+
+    // Perguntas sobre Coco de Roda
+    const quizQuestions = [
+      {
+        question: "Qual é o estado brasileiro mais associado ao Coco de Roda?",
+        options: ["Bahia", "Pernambuco", "Alagoas", "Ceará"],
+        answer: 2,
+        info: "Alagoas é considerado o berço do Coco de Roda, uma tradição cultural importante do estado!"
+      },
+      {
+        question: "Qual instrumento é essencial no Coco de Roda?",
+        options: ["Pandeiro", "Zabumba", "Ganzá", "Todos os anteriores"],
+        answer: 3,
+        info: "O Coco de Roda utiliza vários instrumentos de percussão, incluindo pandeiro, zabumba e ganzá!"
+      },
+      {
+        question: "O que caracteriza a dança do Coco de Roda?",
+        options: ["Passos marcados com os pés", "Roda de dançadores", "Palmas rítmicas", "Todas as opções"],
+        answer: 3,
+        info: "O Coco de Roda envolve todos esses elementos - passos marcados, formação em roda e palmas rítmicas!"
+      }
+    ];
+    let currentQuizQuestion = 0;
+
+    // Sons
+    const eatSound = new Audio('https://www.soundjay.com/nature/sounds/water-drop-1.mp3');
+    const specialEatSound = new Audio('https://www.soundjay.com/mechanical/sounds/magic-chime-1.mp3');
+    const gameOverSound = new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3');
+    const powerSound = new Audio('https://www.soundjay.com/mechanical/sounds/magic-wand-1.mp3');
+    const correctSound = new Audio('https://www.soundjay.com/buttons/sounds/button-21.mp3');
+    const wrongSound = new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3');
+
+    // Controle de direção
+    let lastDirection = { x: 1, y: 0 };
+
+    // Funções para criar texturas realistas
+    function createWoodTexture() {
+      const textureCanvas = document.createElement('canvas');
+      textureCanvas.width = textureCanvas.height = 100;
+      const texCtx = textureCanvas.getContext('2d');
+      
+      // Gradiente para madeira
+      const woodGradient = texCtx.createLinearGradient(0, 0, 0, 100);
+      woodGradient.addColorStop(0, '#8D6E63');
+      woodGradient.addColorStop(0.5, '#5D4037');
+      woodGradient.addColorStop(1, '#8D6E63');
+      
+      texCtx.fillStyle = woodGradient;
+      texCtx.fillRect(0, 0, 100, 100);
+      
+      // Veias da madeira
+      texCtx.strokeStyle = '#5D4037';
+      texCtx.lineWidth = 1;
+      for (let i = 0; i < 10; i++) {
+        texCtx.beginPath();
+        texCtx.moveTo(Math.random() * 100, 0);
+        texCtx.bezierCurveTo(
+          Math.random() * 100, Math.random() * 50,
+          Math.random() * 100, Math.random() * 50,
+          Math.random() * 100, 100
+        );
+        texCtx.stroke();
+      }
+      
+      return textureCanvas;
+    }
+
+    function createLeafTexture() {
+      const textureCanvas = document.createElement('canvas');
+      textureCanvas.width = textureCanvas.height = 100;
+      const texCtx = textureCanvas.getContext('2d');
+      
+      // Base da folha
+      texCtx.fillStyle = '#689F38';
+      texCtx.beginPath();
+      texCtx.ellipse(50, 50, 40, 30, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      // Veias da folha
+      texCtx.strokeStyle = '#33691E';
+      texCtx.lineWidth = 1.5;
+      texCtx.beginPath();
+      texCtx.moveTo(50, 20);
+      texCtx.lineTo(50, 80);
+      
+      for (let i = 0; i < 5; i++) {
+        const y = 20 + (i * 15);
+        texCtx.moveTo(50, y);
+        texCtx.lineTo(20 + Math.random() * 10, y - 10 + Math.random() * 20);
+        
+        texCtx.moveTo(50, y);
+        texCtx.lineTo(80 - Math.random() * 10, y - 10 + Math.random() * 20);
+      }
+      texCtx.stroke();
+      
+      return textureCanvas;
+    }
+
+    function createCoconutTexture() {
+      const textureCanvas = document.createElement('canvas');
+      textureCanvas.width = textureCanvas.height = 100;
+      const texCtx = textureCanvas.getContext('2d');
+      
+      // Base do coco
+      const coconutGradient = texCtx.createRadialGradient(30, 30, 10, 50, 50, 50);
+      coconutGradient.addColorStop(0, '#8D6E63');
+      coconutGradient.addColorStop(1, '#5D4037');
+      
+      texCtx.fillStyle = coconutGradient;
+      texCtx.beginPath();
+      texCtx.ellipse(50, 50, 40, 35, Math.PI/4, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      // Textura fibrosa
+      texCtx.strokeStyle = 'rgba(93, 64, 55, 0.5)';
+      texCtx.lineWidth = 1;
+      for (let i = 0; i < 30; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 10 + Math.random() * 30;
+        const length = 5 + Math.random() * 10;
+        
+        texCtx.beginPath();
+        texCtx.moveTo(
+          50 + Math.cos(angle) * radius,
+          50 + Math.sin(angle) * radius
+        );
+        texCtx.lineTo(
+          50 + Math.cos(angle) * (radius + length),
+          50 + Math.sin(angle) * (radius + length)
+        );
+        texCtx.stroke();
+      }
+      
+      return textureCanvas;
+    }
+
+    function createGoldenCoconutTexture() {
+      const textureCanvas = document.createElement('canvas');
+      textureCanvas.width = textureCanvas.height = 100;
+      const texCtx = textureCanvas.getContext('2d');
+      
+      // Base do coco dourado
+      const goldenGradient = texCtx.createRadialGradient(30, 30, 10, 50, 50, 50);
+      goldenGradient.addColorStop(0, '#FFD600');
+      goldenGradient.addColorStop(0.7, '#FFAB00');
+      goldenGradient.addColorStop(1, '#FF6D00');
+      
+      texCtx.fillStyle = goldenGradient;
+      texCtx.beginPath();
+      texCtx.ellipse(50, 50, 40, 35, Math.PI/4, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      // Brilho
+      texCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      texCtx.beginPath();
+      texCtx.ellipse(65, 35, 15, 10, Math.PI/4, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      // Olhos
+      texCtx.fillStyle = '#33691E';
+      texCtx.beginPath();
+      texCtx.ellipse(40, 45, 5, 7, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      texCtx.beginPath();
+      texCtx.ellipse(60, 45, 5, 7, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      // Boca sorridente
+      texCtx.strokeStyle = '#33691E';
+      texCtx.lineWidth = 2;
+      texCtx.beginPath();
+      texCtx.ellipse(50, 60, 15, 8, 0, 0, Math.PI);
+      texCtx.stroke();
+      
+      return textureCanvas;
+    }
+
+    function createSnakeBodyTexture() {
+      const textureCanvas = document.createElement('canvas');
+      textureCanvas.width = textureCanvas.height = 100;
+      const texCtx = textureCanvas.getContext('2d');
+      
+      // Corpo da cobra
+      const snakeGradient = texCtx.createLinearGradient(0, 0, 0, 100);
+      snakeGradient.addColorStop(0, '#689F38');
+      snakeGradient.addColorStop(1, '#33691E');
+      
+      texCtx.fillStyle = snakeGradient;
+      texCtx.beginPath();
+      texCtx.ellipse(50, 50, 45, 40, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      // Padrão de escamas
+      texCtx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+      texCtx.lineWidth = 1;
+      for (let y = 10; y < 90; y += 8) {
+        for (let x = 10; x < 90; x += 10) {
+          texCtx.beginPath();
+          texCtx.ellipse(x, y, 4, 3, 0, 0, Math.PI * 2);
+          texCtx.stroke();
+        }
+      }
+      
+      return textureCanvas;
+    }
+
+    function createSnakeHeadTexture() {
+      const textureCanvas = document.createElement('canvas');
+      textureCanvas.width = textureCanvas.height = 100;
+      const texCtx = textureCanvas.getContext('2d');
+      
+      // Cabeça da cobra
+      const headGradient = texCtx.createLinearGradient(0, 0, 0, 100);
+      headGradient.addColorStop(0, '#8BC34A');
+      headGradient.addColorStop(1, '#33691E');
+      
+      texCtx.fillStyle = headGradient;
+      texCtx.beginPath();
+      texCtx.ellipse(50, 50, 45, 40, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      // Olhos
+      texCtx.fillStyle = '#F9FBE7';
+      texCtx.beginPath();
+      texCtx.ellipse(35, 40, 8, 10, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      texCtx.beginPath();
+      texCtx.ellipse(65, 40, 8, 10, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      // Pupilas
+      texCtx.fillStyle = '#212121';
+      texCtx.beginPath();
+      texCtx.ellipse(35, 42, 4, 5, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      texCtx.beginPath();
+      texCtx.ellipse(65, 42, 4, 5, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      // Brilho nos olhos
+      texCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      texCtx.beginPath();
+      texCtx.ellipse(37, 38, 2, 2, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      texCtx.beginPath();
+      texCtx.ellipse(67, 38, 2, 2, 0, 0, Math.PI * 2);
+      texCtx.fill();
+      
+      // Boca
+      texCtx.strokeStyle = '#212121';
+      texCtx.lineWidth = 2;
+      texCtx.beginPath();
+      texCtx.ellipse(50, 60, 15, 8, 0, 0, Math.PI);
+      texCtx.stroke();
+      
+      return textureCanvas;
+    }
+
+    // Event listeners
+    document.addEventListener("keydown", changeDirection);
+    restartBtn.addEventListener("click", restartGame);
+    startBtn.addEventListener("click", startGame);
+    quizContinueBtn.addEventListener("click", continueAfterQuiz);
+    
+    // Controles mobile
+    upBtn.addEventListener("touchstart", () => changeDirectionMobile(0, -1));
+    upBtn.addEventListener("click", () => changeDirectionMobile(0, -1));
+    leftBtn.addEventListener("touchstart", () => changeDirectionMobile(-1, 0));
+    leftBtn.addEventListener("click", () => changeDirectionMobile(-1, 0));
+    rightBtn.addEventListener("touchstart", () => changeDirectionMobile(1, 0));
+    rightBtn.addEventListener("click", () => changeDirectionMobile(1, 0));
+    downBtn.addEventListener("touchstart", () => changeDirectionMobile(0, 1));
+    downBtn.addEventListener("click", () => changeDirectionMobile(0, 1));
+
+    function changeDirectionMobile(x, y) {
+      if (lastDirection.x !== x || lastDirection.y !== -y) {
+        velocityX = x;
+        velocityY = y;
+        lastDirection = { x, y };
+      }
+    }
+
+    function startGame() {
+      startScreen.style.display = "none";
+      gameContainer.style.display = "block";
+      backgroundMusic.volume = 0.3;
+      backgroundMusic.play();
+      resizeCanvas(); // Ajusta o canvas ao iniciar
+      generateFood();
+      gameLoop();
+    }
+
+    function changeDirection(event) {
+      const key = event.key;
+      if (key === "ArrowUp" && lastDirection.y !== 1) {
+        velocityX = 0;
+        velocityY = -1;
+        lastDirection = { x: 0, y: -1 };
+      } else if (key === "ArrowDown" && lastDirection.y !== -1) {
+        velocityX = 0;
+        velocityY = 1;
+        lastDirection = { x: 0, y: 1 };
+      } else if (key === "ArrowLeft" && lastDirection.x !== 1) {
+        velocityX = -1;
+        velocityY = 0;
+        lastDirection = { x: -1, y: 0 };
+      } else if (key === "ArrowRight" && lastDirection.x !== -1) {
+        velocityX = 1;
+        velocityY = 0;
+        lastDirection = { x: 1, y: 0 };
+      } else if (key === "m" || key === "M") {
+        // Tecla M para mutar/desmutar a música
+        if (backgroundMusic.paused) {
+          backgroundMusic.play();
+        } else {
+          backgroundMusic.pause();
+        }
+      }
+    }
+
+    function generateFood() {
+      do {
+        food = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount),
+        };
+      } while (
+        snake.some(segment => segment.x === food.x && segment.y === food.y)
+      );
+    }
+
+    function generateSpecialFood() {
+      if (cocosCollected >= 10 && !specialFood) {
+        do {
+          specialFood = {
+            x: Math.floor(Math.random() * tileCount),
+            y: Math.floor(Math.random() * tileCount),
+          };
+        } while (
+          snake.some(segment => segment.x === specialFood.x && segment.y === specialFood.y) ||
+          (food.x === specialFood.x && food.y === specialFood.y)
+        );
+        specialFoodTimer = 150; // Duração em quadros
+      }
+    }
+
+    function checkCollision(head) {
+      return (
+        head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount ||
+        snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
+      );
+    }
+
+    function checkFoodCollision(head) {
+      // Comida normal
+      if (head.x === food.x && head.y === food.y) {
+        const points = powerActive ? 2 : 1; // Dobra pontos se poder ativo
+        score += points;
+        cocosCollected++;
+        snakeGrowth += 2; // Aumenta o tamanho da cobra
+        scoreElement.textContent = `Pontuação: ${score}`;
+        cocoCounter.textContent = `Cocos: ${cocosCollected}/10`;
+        generateFood();
+        eatSound.play();
+        
+        // Verifica se pode gerar coco mágico
+        if (cocosCollected >= 10) {
+          generateSpecialFood();
+        }
+        
+        return true;
+      }
+      
+      // Comida especial (coco mágico)
+      if (specialFood && head.x === specialFood.x && head.y === specialFood.y) {
+        specialFood = null;
+        activatePower();
+        return false; // Não cresce com comida especial
+      }
+      
+      return false;
+    }
+
+    function activatePower() {
+      powerActive = true;
+      powerEndTime = Date.now() + 10000; // 10 segundos
+      gameSpeed = 80; // Aumenta velocidade
+      specialEatSound.play();
+      powerSound.play();
+      updatePowerStatus();
+    }
+
+    function deactivatePower() {
+      powerActive = false;
+      gameSpeed = 150; // Volta velocidade normal
+      powerStatus.textContent = "";
+    }
+
+    function updatePowerStatus() {
+      if (powerActive) {
+        const remaining = Math.ceil((powerEndTime - Date.now()) / 1000);
+        if (remaining > 0) {
+          powerStatus.innerHTML = "✨ <strong>PODER ATIVO!</strong> ✨<br>Velocidade + Pontos Dobrados (" + remaining + "s)";
+          setTimeout(updatePowerStatus, 200);
+        } else {
+          deactivatePower();
+        }
+      }
+    }
+
+    function drawCheckerboard() {
+      // Tabuleiro de damas estilizado
+      const tileSize = canvas.width / tileCount;
+      ctx.fillStyle = "#F1F8E9";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.fillStyle = "#DCEDC8";
+      for (let y = 0; y < tileCount; y++) {
+        for (let x = 0; x < tileCount; x++) {
+          if ((x + y) % 2 === 0) {
+            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+          }
+        }
+      }
+      
+      // Bordas sutis
+      ctx.strokeStyle = "rgba(174, 213, 129, 0.3)";
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= tileCount; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * tileSize, 0);
+        ctx.lineTo(i * tileSize, canvas.height);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(0, i * tileSize);
+        ctx.lineTo(canvas.width, i * tileSize);
+        ctx.stroke();
+      }
+    }
+
+    function drawFood() {
+      // Comida normal (coco)
+      ctx.save();
+      ctx.translate(food.x * gridSize + gridSize/2, food.y * gridSize + gridSize/2);
+      
+      // Desenha a textura do coco
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, 0, gridSize/2 - 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      
+      ctx.drawImage(
+        textures.coconut,
+        0, 0, textures.coconut.width, textures.coconut.height,
+        -gridSize/2, -gridSize/2, gridSize, gridSize
+      );
+      ctx.restore();
+      
+      // Sombra
+      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+      ctx.beginPath();
+      ctx.ellipse(2, 2, gridSize/2 - 2, gridSize/3 - 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.restore();
+      
+      // Comida especial (coco mágico)
+      if (specialFood) {
+        ctx.save();
+        ctx.translate(specialFood.x * gridSize + gridSize/2, specialFood.y * gridSize + gridSize/2);
+        
+        // Desenha a textura do coco dourado
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, gridSize/2 - 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        
+        ctx.drawImage(
+          textures.goldenCoconut,
+          0, 0, textures.goldenCoconut.width, textures.goldenCoconut.height,
+          -gridSize/2, -gridSize/2, gridSize, gridSize
+        );
+        ctx.restore();
+        
+        // Brilho especial
+        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.beginPath();
+        ctx.arc(0, 0, gridSize/2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Efeito de partículas
+        for (let i = 0; i < 5; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.random() * gridSize/3;
+          ctx.fillStyle = `rgba(255, 215, 0, ${Math.random() * 0.5})`;
+          ctx.beginPath();
+          ctx.arc(
+            Math.cos(angle) * radius,
+            Math.sin(angle) * radius,
+            1 + Math.random() * 2,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+        
+        ctx.restore();
+      }
+    }
+
+    function drawSnake() {
+      snake.forEach((segment, index) => {
+        ctx.save();
+        ctx.translate(segment.x * gridSize + gridSize/2, segment.y * gridSize + gridSize/2);
+        
+        // Rotação baseada na direção (apenas para cabeça)
+        if (index === 0) {
+          if (velocityX === 1) ctx.rotate(0); // Direita
+          else if (velocityX === -1) ctx.rotate(Math.PI); // Esquerda
+          else if (velocityY === 1) ctx.rotate(Math.PI/2); // Baixo
+          else if (velocityY === -1) ctx.rotate(-Math.PI/2); // Cima
+        } else {
+          // Rotação do corpo baseada na posição relativa
+          const next = snake[index-1];
+          const angle = Math.atan2(next.y - segment.y, next.x - segment.x);
+          ctx.rotate(angle);
+        }
+        
+        if (index === 0) {
+          // Cabeça da cobra
+          ctx.save();
+          ctx.beginPath();
+          ctx.ellipse(0, 0, gridSize/2 - 2, gridSize/2 - 4, 0, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          
+          ctx.drawImage(
+            textures.snakeHead,
+            0, 0, textures.snakeHead.width, textures.snakeHead.height,
+            -gridSize/2, -gridSize/2, gridSize, gridSize
+          );
+          ctx.restore();
+          
+          // Efeito de poder
+          if (powerActive) {
+            ctx.fillStyle = "rgba(255, 215, 0, 0.2)";
+            ctx.beginPath();
+            ctx.ellipse(0, 0, gridSize/2 + 2, gridSize/2 + 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else {
+          // Corpo da cobra
+          ctx.save();
+          ctx.beginPath();
+          ctx.ellipse(0, 0, gridSize/2 - 3, gridSize/2 - 5, 0, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          
+          ctx.drawImage(
+            textures.snakeBody,
+            0, 0, textures.snakeBody.width, textures.snakeBody.height,
+            -gridSize/2, -gridSize/2, gridSize, gridSize
+          );
+          ctx.restore();
+        }
+        
+        // Sombra
+        ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+        ctx.beginPath();
+        ctx.ellipse(2, 2, gridSize/2 - (index === 0 ? 2 : 3), gridSize/3 - (index === 0 ? 4 : 5), 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+      });
+    }
+
+    function showQuiz() {
+      gameRunning = false;
+      currentQuizQuestion = Math.floor(Math.random() * quizQuestions.length);
+      const question = quizQuestions[currentQuizQuestion];
+      
+      quizQuestion.textContent = question.question;
+      quizOptions.innerHTML = "";
+      
+      question.options.forEach((option, index) => {
+        const optionElement = document.createElement("div");
+        optionElement.className = "quiz-option";
+        optionElement.textContent = option;
+        optionElement.setAttribute("data-index", index);
+        optionElement.addEventListener("click", () => checkAnswer(index));
+        quizOptions.appendChild(optionElement);
+      });
+      
+      quizResult.textContent = "";
+      quizContinueBtn.style.display = "none";
+      quizContainer.style.display = "flex";
+    }
+
+    function checkAnswer(selectedIndex) {
+      const question = quizQuestions[currentQuizQuestion];
+      
+      if (selectedIndex === question.answer) {
+        quizResult.textContent = "✅ Correto! " + question.info;
+        quizResult.style.color = "#2E7D32";
+        correctSound.play();
+      } else {
+        quizResult.textContent = "❌ Errado! A resposta correta é: " + question.options[question.answer] + ". " + question.info;
+        quizResult.style.color = "#E53935";
+        wrongSound.play();
+      }
+      
+      quizContinueBtn.style.display = "block";
+      quizOptions.querySelectorAll(".quiz-option").forEach(opt => {
+        opt.style.pointerEvents = "none";
+        if (parseInt(opt.getAttribute("data-index")) === question.answer) {
+          opt.style.backgroundColor = "#C8E6C9";
+        } else if (parseInt(opt.getAttribute("data-index")) === selectedIndex && selectedIndex !== question.answer) {
+          opt.style.backgroundColor = "#FFCDD2";
+        }
+      });
+    }
+
+    function continueAfterQuiz() {
+      quizContainer.style.display = "none";
+      restartGame();
+    }
+
+    function showGameOver() {
+      gameRunning = false;
+      gameOverScreen.style.display = "flex";
+      finalScoreSpan.textContent = score;
+      gameOverSound.play();
+      backgroundMusic.pause();
+      
+      // Mostra quiz após game over
+      setTimeout(showQuiz, 1500);
+    }
+
+    function gameLoop() {
+      if (!gameRunning) return;
+      
+      const head = {
+        x: snake[0].x + velocityX,
+        y: snake[0].y + velocityY,
+      };
+
+      if (checkCollision(head)) {
+        showGameOver();
+        return;
+      }
+
+      const ateFood = checkFoodCollision(head);
+      snake.unshift(head);
+      
+      // Crescimento controlado da cobra
+      if (ateFood && snakeGrowth > 0) {
+        snakeGrowth--;
+      } else if (!ateFood && snakeGrowth <= 0) {
+        snake.pop();
+      } else if (!ateFood) {
+        snakeGrowth--;
+      }
+
+      // Atualizar comida especial
+      if (specialFood) {
+        specialFoodTimer--;
+        if (specialFoodTimer <= 0) {
+          specialFood = null;
+        }
+      }
+
+      // Desenhar cena
+      drawCheckerboard();
+      drawFood();
+      drawSnake();
+
+      setTimeout(gameLoop, gameSpeed);
+    }
+
+    function restartGame() {
+      snake = [{ x: 10, y: 10 }];
+      velocityX = 1;
+      velocityY = 0;
+      lastDirection = { x: 1, y: 0 };
+      score = 0;
+      cocosCollected = 0;
+      snakeGrowth = 0;
+      scoreElement.textContent = `Pontuação: ${score}`;
+      cocoCounter.textContent = `Cocos: ${cocosCollected}/10`;
+      gameSpeed = 150;
+      generateFood();
+      specialFood = null;
+      powerActive = false;
+      gameOverScreen.style.display = "none";
+      gameRunning = true;
+      
+      // Reiniciar música
+      backgroundMusic.currentTime = 0;
+      backgroundMusic.play();
+      
+      gameLoop();
+    }
+
+    // Redimensionar canvas quando a janela for redimensionada
+    window.addEventListener('resize', () => {
+      if (gameContainer.style.display !== 'none') {
+        resizeCanvas();
+      }
+    });
+
+    // Inicializar tela de início
+    startScreen.style.display = "block";
+    gameContainer.style.display = "none";
+  </script>
+</body>
+</ht
